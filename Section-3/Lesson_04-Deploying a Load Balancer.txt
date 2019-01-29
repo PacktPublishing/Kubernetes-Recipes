@@ -1,0 +1,14 @@
+kind: Service
+apiVersion: v1
+metadata:
+    name: loadbalancer-service
+spec:
+    selector:
+        app: app-lb
+    ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9376
+    clusterIP: <internalIP>
+    loadBalancerIP: <externalIP>
+    type: LoadBalancer

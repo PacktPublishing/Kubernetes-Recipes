@@ -1,0 +1,68 @@
+# vi  pv.yaml
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: kube-pv
+spec:
+  capacity:
+    storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Recycle
+  nfs:
+    path: /var/nfs/general
+    server: 192.168.86.128
+    readOnly: false
+
+
+# kubectl create -f pv.yaml
+
+# kubectl get pv
+
+Then we need to create a YAML that needs to claim this storage
+
+# vi kube-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: kube-pv
+spec:
+  accessModes:
+  - ReadWriteMany
+resources:
+   requests:
+     storage: 1Gi
+
+# kubectl create -f kube-pvc.yaml
+# kubectl get pvc
+
+Now we will create our pod.
+
+# vi nfs-pod.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nfs-pod
+  labels:
+    name: nfs-pod
+spec:
+  containers:
+  - name: nfs-container
+    image: busybox:1.28
+    command:
+      - sleep
+      - "3600"
+    volumeMounts:
+    - name: nfsvol
+      mountPath: /tmp
+  restartPolicy: Always
+  securityContext:
+    fsGroup: 65534
+    runAsUser: 65534
+  volumes:
+    - name: nfsvol
+      persistentVolumeClaim:
+        claimName: kube-pvc
